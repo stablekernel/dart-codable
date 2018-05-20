@@ -8,9 +8,7 @@ abstract class Coding {
   @mustCallSuper
   void decode(KeyedArchive object) {
     referenceURI = object.referenceURI;
-    if (castMap != null) {
-      object.castValues(castMap);
-    }
+    object.castValues(castMap);
   }
 
   // would prefer to write referenceURI to object here, but see note in KeyedArchive._encodedObject
