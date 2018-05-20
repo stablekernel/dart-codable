@@ -3,10 +3,14 @@ import 'package:meta/meta.dart';
 
 abstract class Coding {
   Uri referenceURI;
+  Map<String, dynamic> get castMap => null;
 
   @mustCallSuper
   void decode(KeyedArchive object) {
     referenceURI = object.referenceURI;
+    if (castMap != null) {
+      object.castValues(castMap);
+    }
   }
 
   // would prefer to write referenceURI to object here, but see note in KeyedArchive._encodedObject
