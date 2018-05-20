@@ -10,7 +10,6 @@ abstract class Coding {
   }
 
   // would prefer to write referenceURI to object here, but see note in KeyedArchive._encodedObject
-  @mustCallSuper
   void encode(KeyedArchive object);
 
 }
