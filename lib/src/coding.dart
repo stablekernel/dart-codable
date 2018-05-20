@@ -1,9 +1,10 @@
 import 'package:codable/src/keyed_archive.dart';
 import 'package:meta/meta.dart';
+import 'package:cast/cast.dart' as cast;
 
 abstract class Coding {
   Uri referenceURI;
-  Map<String, dynamic> get castMap => null;
+  Map<String, cast.Cast<dynamic>> get castMap => null;
 
   @mustCallSuper
   void decode(KeyedArchive object) {
