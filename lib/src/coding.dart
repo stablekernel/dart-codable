@@ -1,6 +1,6 @@
 import 'package:codable/src/keyed_archive.dart';
 import 'package:meta/meta.dart';
-import 'package:cast/cast.dart' as cast;
+import 'package:codable/cast.dart' as cast;
 
 abstract class Coding {
   Uri referenceURI;

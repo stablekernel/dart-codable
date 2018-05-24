@@ -1,9 +1,8 @@
 import 'dart:collection';
 import 'package:codable/src/coding.dart';
-import 'package:cast/cast.dart' as cast;
+import 'package:codable/cast.dart' as cast;
 import 'package:codable/src/list.dart';
 import 'package:codable/src/resolver.dart';
-
 
 class KeyedArchive extends Object with MapMixin<String, dynamic> {
   static KeyedArchive unarchive(Map<String, dynamic> data) {
@@ -80,6 +79,9 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
   void resolve(KeyResolver coder) {
     if (referenceURI != null) {
       _objectReference = coder.resolve(referenceURI);
+      if (_objectReference == null) {
+        throw new ArgumentError("Invalid document. Reference '$referenceURI' does not exist in document.");
+      }
     }
 
     _map.forEach((key, val) {
@@ -94,6 +96,10 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
   /* decode */
 
   T _decodedObject<T extends Coding>(KeyedArchive raw, T inflate()) {
+    if (raw == null) {
+      return null;
+    }
+
     if (raw._inflated == null) {
       raw._inflated = inflate();
       raw._inflated.decode(raw);
@@ -102,23 +108,21 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
     return raw._inflated;
   }
 
-  dynamic decode(String key) {
+  T decode<T>(String key) {
     var v = _getValue(key);
     if (v == null) {
       return null;
     }
 
+    if (T == Uri) {
+      return Uri.parse(v) as T;
+    } else if (T == DateTime) {
+      return DateTime.parse(v) as T;
+    }
+
     return v;
   }
 
-  Uri decodeUri(String key) {
-    final v = _getValue(key);
-    if (v == null) {
-      return null;
-    }
-
-    return Uri.parse(v);
-  }
 
   T decodeObject<T extends Coding>(String key, T inflate()) {
     final val = _getValue(key);
@@ -128,7 +132,7 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
 
     if (val is! KeyedArchive) {
       throw new ArgumentError(
-        "Cannot decode key '$key' into 'APIObject', because the value is not a Map. Actual value: '$val'.");
+        "Cannot decode key '$key' into '$T', because the value is not a Map. Actual value: '$val'.");
     }
 
     return _decodedObject(val, inflate);
@@ -141,7 +145,7 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
     }
     if (val is! List) {
       throw new ArgumentError(
-        "Cannot decode key '$key' as 'List<T>', because value is not a List. Actual value: '$val'.");
+        "Cannot decode key '$key' as 'List<$T>', because value is not a List. Actual value: '$val'.");
     }
 
     return (val as List<dynamic>).map((v) => _decodedObject(v, inflate)).toList().cast<T>();
@@ -154,10 +158,10 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> {
     }
 
     if (v is! Map<String, dynamic>) {
-      throw new ArgumentError("Cannot decode key '$key' as 'Map<String, T>', because value is not a Map. Actual value: '$v'.");
+      throw new ArgumentError("Cannot decode key '$key' as 'Map<String, $T>', because value is not a Map. Actual value: '$v'.");
     }
 
-    return new Map.fromIterable(v.keys, key: (k) => k, value: (k) => _decodedObject(v[k], inflate));
+    return new Map<String, T>.fromIterable(v.keys, key: (k) => k, value: (k) => _decodedObject(v[k], inflate));
   }
 
   /* encode */
