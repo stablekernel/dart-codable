@@ -347,7 +347,19 @@ void main() {
 
       expect(p.hashCode, isNot(p.children.first.parent.hashCode));
     });
+
+    test("Can override castMap to coerce values", () {
+      final archive = getJSONArchive({
+        "key": {
+          "name": "Bob",
+          "things": ["value"]
+        }
+      });
+      final p = archive.decodeObject("key", () => Parent());
+      expect(p.things, ["value"]);
+    });
   });
+
 }
 
 /// Strips type info from data
@@ -360,6 +372,14 @@ class Parent extends Coding {
   Child child;
   List<Child> children;
   Map<String, Child> childMap;
+  List<String> things;
+
+  @override
+  Map<String, cast.Cast<dynamic>> get castMap {
+   return {
+     "things": cast.List(cast.String)
+   };
+  }
 
   @override
   void decode(KeyedArchive object) {
@@ -369,6 +389,7 @@ class Parent extends Coding {
     child = object.decodeObject("child", () => Child());
     children = object.decodeObjects("children", () => Child());
     childMap = object.decodeObjectMap("childMap", () => Child());
+    things = object.decode("things");
   }
 
   @override
