@@ -1,9 +1,10 @@
 import 'dart:collection';
 
+import 'package:codable/src/codable.dart';
 import 'package:codable/src/keyed_archive.dart';
 import 'package:codable/src/resolver.dart';
 
-class ListArchive extends Object with ListMixin<dynamic> {
+class ListArchive extends Object with ListMixin<dynamic> implements Referencable {
   final List<dynamic> _inner;
 
   ListArchive() : _inner = [];
@@ -44,12 +45,13 @@ class ListArchive extends Object with ListMixin<dynamic> {
     _inner.addAll(iterable);
   }
 
-  void resolve(KeyResolver coder) {
+  @override
+  void resolveOrThrow(ReferenceResolver coder) {
     _inner.forEach((i) {
       if (i is KeyedArchive) {
-        i.resolve(coder);
+        i.resolveOrThrow(coder);
       } else if (i is ListArchive) {
-        i.resolve(coder);
+        i.resolveOrThrow(coder);
       }
     });
   }
