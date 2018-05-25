@@ -1,22 +1,61 @@
 # codable
+ 
+[![Build Status](https://travis-ci.org/stablekernel/dart-codable.svg?branch=master)](https://travis-ci.org/stablekernel/dart-codable)
 
-A library for Dart developers.
+A library for encoding and decoding dynamic data into Dart objects.
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Data objects extend `Coding`:
 
-## Usage
+```dart
+class Person extends Coding {
+  String name;
 
-A simple usage example:
+  @override
+  void decode(KeyedArchive object) {
+    // must call super
+    super.decode(object);
 
-    import 'package:codable/codable.dart';
+    name = object.decode("name");   
+  }
 
-    main() {
-      var awesome = new Awesome();
-    }
+  @override
+  void encode(KeyedArchive object) {
+    object.encode("name", name);
+  }
+}
+```
 
-## Features and bugs
+An object that extends `Coding` can be read from JSON: 
 
-Please file feature requests and bugs at the [issue tracker][tracker].
+```dart
+final json = json.decode(...);
+final archive = KeyedArchive.unarchive(json);
+final person = new Person()..decode(archive);
+```
 
-[tracker]: http://example.com/issues/replaceme
+`Coding` objects can encode or decode other `Coding` objects.
+
+```dart
+class Team extends Coding {
+
+  List<Person> members;
+  Person manager;
+
+  @override
+  void decode(KeyedArchive object) {
+    // must call super
+    super.decode(object);
+
+    members = object.decodeObjectList("members");
+    manager = object.decodeObject("manager");
+  }
+
+  @override
+  void encode(KeyedArchive object) {
+    object.encodeObject("manager", manager);
+    object.encodeObjectList("members", members);
+  }
+}
+```
+
+`Coding` objects may be referred to multiple times in a document without duplicating their structure. See the specification for [JSON Schema](http://json-schema.org) and the `$ref` keyword for more details.
