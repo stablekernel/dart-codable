@@ -99,6 +99,8 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
       } else if (val is ListArchive) {
         val.resolveOrThrow(coder);
       }
+
+      // Need to resolve native lists and native map
     });
   }
 
@@ -221,7 +223,7 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
       return;
     }
 
-    _map[key] = value.map((v) => _encodedObject(v)).toList();
+    _map[key] = new ListArchive.fromRaw(value.map((v) => _encodedObject(v)).toList());
   }
 
   void encodeObjectMap<T extends Coding>(String key, Map<String, T> value) {
@@ -229,7 +231,7 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
       return;
     }
 
-    var object = <String, dynamic>{};
+    final object = KeyedArchive({});
     value.forEach((k, v) {
       object[k] = _encodedObject(v);
     });
