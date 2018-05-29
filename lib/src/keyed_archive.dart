@@ -99,8 +99,6 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
       } else if (val is ListArchive) {
         val.resolveOrThrow(coder);
       }
-
-      // Need to resolve native lists and native map
     });
   }
 
