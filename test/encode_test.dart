@@ -134,6 +134,28 @@ void main() {
       }
     });
 
+    test("If reference doesn't exist in objectMap, an error is thrown when creating document", () {
+      final container = Container(Parent("Bob", childMap: {"c": Child._()..referenceURI = Uri(path: "/definitions/child")}), {});
+
+      try {
+        KeyedArchive.archive(container);
+        fail('unreachable');
+      } on ArgumentError catch (e) {
+        expect(e.toString(), contains("#/definitions/child"));
+      }
+    });
+
+    test("If reference doesn't exist in objectList, an error is thrown when creating document", () {
+      final container = Container(Parent("Bob", children: [Child._()..referenceURI = Uri(path: "/definitions/child")]), {});
+
+      try {
+        KeyedArchive.archive(container);
+        fail('unreachable');
+      } on ArgumentError catch (e) {
+        expect(e.toString(), contains("#/definitions/child"));
+      }
+    });
+
     test("Parent can contain reference to child in a list of objects", () {
       final container = Container(
           Parent("Bob", children: [Child("Sally"), Child._()..referenceURI = Uri(path: "/definitions/child")]),
@@ -150,6 +172,26 @@ void main() {
             {"name": "Sally"},
             {"\$ref": "#/definitions/child"}
           ]
+        }
+      });
+    });
+
+    test("Parent can contain reference to child in a map of objects", () {
+      final container = Container(
+        Parent("Bob", childMap: {"sally": Child("Sally"), "ref": Child._()..referenceURI = Uri(path: "/definitions/child")}),
+        {"child": Child("Fred")});
+
+      final out = KeyedArchive.archive(container);
+      expect(out, {
+        "definitions": {
+          "child": {"name": "Fred"}
+        },
+        "root": {
+          "name": "Bob",
+          "childMap": {
+            "sally": {"name": "Sally"},
+            "ref": {"\$ref": "#/definitions/child"}
+          }
         }
       });
     });
@@ -206,6 +248,8 @@ class Container extends Coding {
 
   @override
   void decode(KeyedArchive object) {
+    super.decode(object);
+
     root = object.decodeObject("root", () => Parent._());
     definitions = object.decodeObjectMap("definitions", () => Child._());
   }
