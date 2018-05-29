@@ -111,7 +111,7 @@ void main() {
       final container = Container(
           Parent("Bob", child: Child._()..referenceURI = Uri(path: "/definitions/child")), {"child": Child("Sally")});
 
-      final out = KeyedArchive.archive(container);
+      final out = KeyedArchive.archive(container, allowReferences: true);
       expect(out, {
         "definitions": {
           "child": {"name": "Sally"}
@@ -127,7 +127,7 @@ void main() {
       final container = Container(Parent("Bob", child: Child._()..referenceURI = Uri(path: "/definitions/child")), {});
 
       try {
-        KeyedArchive.archive(container);
+        KeyedArchive.archive(container, allowReferences: true);
         fail('unreachable');
       } on ArgumentError catch (e) {
         expect(e.toString(), contains("#/definitions/child"));
@@ -138,7 +138,7 @@ void main() {
       final container = Container(Parent("Bob", childMap: {"c": Child._()..referenceURI = Uri(path: "/definitions/child")}), {});
 
       try {
-        KeyedArchive.archive(container);
+        KeyedArchive.archive(container, allowReferences: true);
         fail('unreachable');
       } on ArgumentError catch (e) {
         expect(e.toString(), contains("#/definitions/child"));
@@ -149,7 +149,7 @@ void main() {
       final container = Container(Parent("Bob", children: [Child._()..referenceURI = Uri(path: "/definitions/child")]), {});
 
       try {
-        KeyedArchive.archive(container);
+        KeyedArchive.archive(container, allowReferences: true);
         fail('unreachable');
       } on ArgumentError catch (e) {
         expect(e.toString(), contains("#/definitions/child"));
@@ -161,7 +161,7 @@ void main() {
           Parent("Bob", children: [Child("Sally"), Child._()..referenceURI = Uri(path: "/definitions/child")]),
           {"child": Child("Fred")});
 
-      final out = KeyedArchive.archive(container);
+      final out = KeyedArchive.archive(container, allowReferences: true);
       expect(out, {
         "definitions": {
           "child": {"name": "Fred"}
@@ -181,7 +181,7 @@ void main() {
         Parent("Bob", childMap: {"sally": Child("Sally"), "ref": Child._()..referenceURI = Uri(path: "/definitions/child")}),
         {"child": Child("Fred")});
 
-      final out = KeyedArchive.archive(container);
+      final out = KeyedArchive.archive(container, allowReferences: true);
       expect(out, {
         "definitions": {
           "child": {"name": "Fred"}
@@ -201,7 +201,7 @@ void main() {
           Parent("Bob", children: [Child("Sally"), Child._()..referenceURI = Uri(path: "/definitions/child")]),
           {"child": Child("Fred", parent: Parent._()..referenceURI = Uri(path: "/root"))});
 
-      final out = KeyedArchive.archive(container);
+      final out = KeyedArchive.archive(container, allowReferences: true);
       final expected = {
         "definitions": {
           "child": {

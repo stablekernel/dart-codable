@@ -293,7 +293,7 @@ void main() {
           "name": "Bob",
           "child": {"\$ref": "#/child"}
         }
-      });
+      }, allowReferences: true);
 
       final p = archive.decodeObject("parent", () => Parent());
       expect(p.name, "Bob");
@@ -308,7 +308,7 @@ void main() {
             "name": "Bob",
             "child": {"\$ref": "#/child"}
           }
-        });
+        }, allowReferences: true);
         fail("unreachable");
       } on ArgumentError catch (e) {
         expect(e.toString(), contains("/child"));
@@ -322,7 +322,7 @@ void main() {
           "name": "Bob",
           "children": [{"\$ref": "#/child"}, {"name": "fred"}]
         }
-      });
+      }, allowReferences: true);
 
       final p = archive.decodeObject("parent", () => Parent());
       expect(p.name, "Bob");
@@ -337,7 +337,7 @@ void main() {
           "name": "Bob",
           "children": [{"\$ref": "#/child"}, {"name": "fred"}]
         }
-      });
+      }, allowReferences: true);
 
       final p = archive.decodeObject("parent", () => Parent());
       expect(p.name, "Bob");
@@ -363,8 +363,8 @@ void main() {
 }
 
 /// Strips type info from data
-KeyedArchive getJSONArchive(dynamic data) {
-  return KeyedArchive.unarchive(json.decode(json.encode(data)));
+KeyedArchive getJSONArchive(dynamic data, {bool allowReferences: false}) {
+  return KeyedArchive.unarchive(json.decode(json.encode(data)), allowReferences: allowReferences);
 }
 
 class Parent extends Coding {

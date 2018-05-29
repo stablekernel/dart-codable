@@ -1,20 +1,25 @@
 import 'dart:collection';
 
 import 'package:codable/src/codable.dart';
+import 'package:codable/src/coding.dart';
 import 'package:codable/src/keyed_archive.dart';
 import 'package:codable/src/resolver.dart';
 
+/// A list of values in a [KeyedArchive].
+///
+/// This object is a [List] that has additional behavior for encoding and decoding [Coding] objects.
 class ListArchive extends Object with ListMixin<dynamic> implements Referencable {
   final List<dynamic> _inner;
 
   ListArchive() : _inner = [];
 
-  ListArchive.fromRaw(List<dynamic> raw)
+  /// Replaces all instances of [Map] and [List] in this object with [KeyedArchive] and [ListArchive]s.
+  ListArchive.from(List<dynamic> raw)
     : _inner = raw.map((e) {
     if (e is Map) {
-      return new KeyedArchive(e);
+      return KeyedArchive(e);
     } else if (e is List) {
-      return ListArchive.fromRaw(e);
+      return ListArchive.from(e);
     }
     return e;
   }).toList();
