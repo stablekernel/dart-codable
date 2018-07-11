@@ -50,6 +50,20 @@ class ListArchive extends Object with ListMixin<dynamic> implements Referencable
     _inner.addAll(iterable);
   }
 
+  List<dynamic> toPrimitive() {
+    final out = [];
+    _inner.forEach((val) {
+      if (val is KeyedArchive) {
+        out.add(val.toPrimitive());
+      } else if (val is ListArchive) {
+        out.add(val.toPrimitive());
+      } else {
+        out.add(val);
+      }
+    });
+    return out;
+  }
+
   @override
   void resolveOrThrow(ReferenceResolver coder) {
     _inner.forEach((i) {
