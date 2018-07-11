@@ -135,7 +135,8 @@ void main() {
     });
 
     test("If reference doesn't exist in objectMap, an error is thrown when creating document", () {
-      final container = Container(Parent("Bob", childMap: {"c": Child._()..referenceURI = Uri(path: "/definitions/child")}), {});
+      final container =
+          Container(Parent("Bob", childMap: {"c": Child._()..referenceURI = Uri(path: "/definitions/child")}), {});
 
       try {
         KeyedArchive.archive(container, allowReferences: true);
@@ -146,7 +147,8 @@ void main() {
     });
 
     test("If reference doesn't exist in objectList, an error is thrown when creating document", () {
-      final container = Container(Parent("Bob", children: [Child._()..referenceURI = Uri(path: "/definitions/child")]), {});
+      final container =
+          Container(Parent("Bob", children: [Child._()..referenceURI = Uri(path: "/definitions/child")]), {});
 
       try {
         KeyedArchive.archive(container, allowReferences: true);
@@ -178,8 +180,9 @@ void main() {
 
     test("Parent can contain reference to child in a map of objects", () {
       final container = Container(
-        Parent("Bob", childMap: {"sally": Child("Sally"), "ref": Child._()..referenceURI = Uri(path: "/definitions/child")}),
-        {"child": Child("Fred")});
+          Parent("Bob",
+              childMap: {"sally": Child("Sally"), "ref": Child._()..referenceURI = Uri(path: "/definitions/child")}),
+          {"child": Child("Fred")});
 
       final out = KeyedArchive.archive(container, allowReferences: true);
       expect(out, {
@@ -230,6 +233,30 @@ void main() {
       expect(reencodedArchive, expected);
     });
   });
+
+  test("toPrimitive does not include keyed archives or lists", () {
+    final archive = KeyedArchive.unarchive({
+      "value": "v",
+      "archive": {"key": "value"},
+      "list": [
+        "value",
+        {"key": "value"},
+        ["value"]
+      ]
+    });
+
+    final encoded = archive.toPrimitive();
+    expect(encoded["value"], "v");
+    expect(encoded["archive"] is Map<String, dynamic>, true);
+    expect(encoded["archive"] is KeyedArchive, false);
+    expect(encoded["list"] is List<dynamic>, true);
+    expect(encoded["list"] is ListArchive, false);
+    expect(encoded["list"][0], "value");
+    expect(encoded["list"][1] is Map<String, dynamic>, true);
+    expect(encoded["list"][1] is KeyedArchive, false);
+    expect(encoded["list"][2] is List<dynamic>, true);
+    expect(encoded["list"][2] is ListArchive, false);
+  });
 }
 
 Map<String, dynamic> encode(void encoder(KeyedArchive object)) {
@@ -240,11 +267,11 @@ Map<String, dynamic> encode(void encoder(KeyedArchive object)) {
 
 class Container extends Coding {
   Container._();
+
   Container(this.root, this.definitions);
 
   Parent root;
   Map<String, Coding> definitions;
-
 
   @override
   void decode(KeyedArchive object) {

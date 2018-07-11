@@ -55,7 +55,7 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
     if (allowReferences) {
       archive.resolveOrThrow(new ReferenceResolver(archive));
     }
-    return archive;
+    return archive.toPrimitive();
   }
 
   KeyedArchive._empty();
@@ -134,6 +134,20 @@ class KeyedArchive extends Object with MapMixin<String, dynamic> implements Refe
   void clear() => _map.clear();
 
   dynamic remove(Object key) => _map.remove(key);
+
+  Map<String, dynamic> toPrimitive() {
+    final out = <String, dynamic>{};
+    _map.forEach((key, val) {
+      if (val is KeyedArchive) {
+        out[key] = val.toPrimitive();
+      } else if (val is ListArchive) {
+        out[key] = val.toPrimitive();
+      } else {
+        out[key] = val;
+      }
+    });
+    return out;
+  }
 
   dynamic _getValue(String key) {
     if (_map.containsKey(key)) {
