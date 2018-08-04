@@ -1,12 +1,11 @@
 language: dart
 dart:
-  - dev
+  - stable/raw/2.0.0
 
 jobs:
   include:
   - stage: test
-    env: DART_VM_OPTIONS=--preview-dart-2
-    script: pub get && pub run test -j1
+    script: pub get && pub run test
 
 stages:
 - test

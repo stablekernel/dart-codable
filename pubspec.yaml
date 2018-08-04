@@ -1,14 +1,14 @@
 name: codable
-description: A library for converting dynamic, structured data (JSON, YAML) into Dart types.
-version: 1.0.0-beta.2
+description: A serialization library for converting dynamic, structured data (JSON, YAML) into Dart types.
+version: 1.0.0
 homepage: https://github.com/stablekernel/dart-codable
 author: stable|kernel <jobs@stablekernel.com>
 
 environment:
-  sdk: '>=2.0.0-dev.52.0 <2.0.0'
+  sdk: '>=2.0.0 <3.0.0'
 
 dependencies:
-  meta: ^1.1.4
+  meta: ^1.1.5
 
 dev_dependencies:
-  test: ^0.12.30
+  test: ^1.3.0
