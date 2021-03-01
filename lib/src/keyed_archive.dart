@@ -131,7 +131,7 @@ class KeyedArchive extends Object
     _map[key] = value;
   }
 
-  dynamic operator [](Object? key) => _getValue(key as String);
+  dynamic operator [](Object? key) => _getValue(key as String?);
 
   Iterable<String> get keys => _map.keys;
 
@@ -153,7 +153,7 @@ class KeyedArchive extends Object
     return out;
   }
 
-  dynamic _getValue(String key) {
+  dynamic _getValue(String? key) {
     if (_map.containsKey(key)) {
       return _map[key];
     }
@@ -228,7 +228,7 @@ class KeyedArchive extends Object
   /// If this object is a reference to another object (via [referenceURI]), this object's key-value
   /// pairs will be searched first. If [key] is not found, the referenced object's key-values pairs are searched.
   /// If no match is found, null is returned.
-  T? decode<T>(String key) {
+  T? decode<T>(String? key) {
     var v = _getValue(key);
     if (v == null) {
       return null;
@@ -248,7 +248,7 @@ class KeyedArchive extends Object
   /// [inflate] must create an empty instance of [T]. The value associated with [key]
   /// must be a [KeyedArchive] (a [Map]). The values of the associated object are read into
   /// the empty instance of [T].
-  T? decodeObject<T extends Coding>(String key, T inflate()) {
+  T? decodeObject<T extends Coding>(String? key, T inflate()) {
     final val = _getValue(key);
     if (val == null) {
       return null;
@@ -287,7 +287,7 @@ class KeyedArchive extends Object
   /// must be a [KeyedArchive] (a [Map]), where each value is a [T].
   /// For each key-value pair of the archived map, [inflate] is invoked and
   /// each value is decoded into the instance of [T].
-  Map<String, T?>? decodeObjectMap<T extends Coding>(String key, T inflate()) {
+  Map<String, T?>? decodeObjectMap<T extends Coding>(String? key, T inflate()) {
     var v = _getValue(key);
     if (v == null) {
       return null;
