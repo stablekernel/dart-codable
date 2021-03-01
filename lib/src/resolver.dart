@@ -5,9 +5,9 @@ class ReferenceResolver {
 
   final KeyedArchive document;
 
-  KeyedArchive resolve(Uri ref) {
+  KeyedArchive? resolve(Uri ref) {
     return ref.pathSegments.fold(document, (objectPtr, pathSegment) {
-      return objectPtr[pathSegment] as Map<String, dynamic>;
-    }) as KeyedArchive;
+      return (objectPtr as Map)[pathSegment];
+    });
   }
 }
