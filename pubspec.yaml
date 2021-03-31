@@ -1,11 +1,11 @@
-name: codable
+name: conduit_codable
 description: A serialization library for converting dynamic, structured data (JSON, YAML) into Dart types.
-version: 1.0.0
+version: 1.0.0-b1
 homepage: https://github.com/stablekernel/dart-codable
 author: stable|kernel <jobs@stablekernel.com>
 
 environment:
-  sdk: '>=2.12.0-0 <3.0.0'
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
 

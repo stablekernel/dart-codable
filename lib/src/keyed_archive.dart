@@ -1,9 +1,9 @@
 import 'dart:collection';
-import 'package:codable/src/codable.dart';
-import 'package:codable/src/coding.dart';
-import 'package:codable/cast.dart' as cast;
-import 'package:codable/src/list.dart';
-import 'package:codable/src/resolver.dart';
+import 'package:conduit_codable/src/codable.dart';
+import 'package:conduit_codable/src/coding.dart';
+import 'package:conduit_codable/cast.dart' as cast;
+import 'package:conduit_codable/src/list.dart';
+import 'package:conduit_codable/src/resolver.dart';
 
 /// A container for a dynamic data object that can be decoded into [Coding] objects.
 ///
@@ -36,10 +36,10 @@ class KeyedArchive extends Object
   /// If [allowReferences] is true, JSON Schema references will be traversed and decoded objects
   /// will contain values from the referenced object. This flag defaults to false.
   static KeyedArchive unarchive(Map<String, dynamic> data,
-      {bool allowReferences: false}) {
-    final archive = new KeyedArchive(data);
+      {bool allowReferences = false}) {
+    final archive = KeyedArchive(data);
     if (allowReferences) {
-      archive.resolveOrThrow(new ReferenceResolver(archive));
+      archive.resolveOrThrow(ReferenceResolver(archive));
     }
     return archive;
   }
@@ -52,17 +52,17 @@ class KeyedArchive extends Object
   ///
   /// If [allowReferences] is true, JSON Schema references in the emitted document will be validated.
   /// Defaults to false.
-  static Map<String, dynamic> archive(Coding root,
-      {bool allowReferences: false}) {
-    final archive = new KeyedArchive({});
+  static Map<String?, dynamic> archive(Coding root,
+      {bool allowReferences = false}) {
+    final archive = KeyedArchive({});
     root.encode(archive);
     if (allowReferences) {
-      archive.resolveOrThrow(new ReferenceResolver(archive));
+      archive.resolveOrThrow(ReferenceResolver(archive));
     }
     return archive.toPrimitive();
   }
 
-  KeyedArchive._empty();
+  KeyedArchive._empty() : _map = Map<String, dynamic>();
 
   /// Use [unarchive] instead.
   KeyedArchive(this._map) {
@@ -86,7 +86,7 @@ class KeyedArchive extends Object
   ///
   Uri? referenceURI;
 
-  late Map<String, dynamic> _map;
+  Map<String, dynamic> _map;
   Coding? _inflated;
   KeyedArchive? _objectReference;
 
@@ -118,7 +118,7 @@ class KeyedArchive extends Object
       return;
     }
 
-    final caster = new cast.Keyed(schema);
+    final caster = cast.Keyed(schema);
     _map = caster.cast(_map);
 
     if (_objectReference != null) {
@@ -127,11 +127,11 @@ class KeyedArchive extends Object
     }
   }
 
-  operator []=(String key, dynamic value) {
+  operator []=(String key, dynamic? value) {
     _map[key] = value;
   }
 
-  dynamic operator [](Object? key) => _getValue(key as String?);
+  dynamic? operator [](Object? key) => _getValue(key as String);
 
   Iterable<String> get keys => _map.keys;
 
@@ -139,8 +139,8 @@ class KeyedArchive extends Object
 
   dynamic remove(Object? key) => _map.remove(key);
 
-  Map<String, dynamic> toPrimitive() {
-    final out = <String, dynamic>{};
+  Map<String?, dynamic> toPrimitive() {
+    final out = <String?, dynamic>{};
     _map.forEach((key, val) {
       if (val is KeyedArchive) {
         out[key] = val.toPrimitive();
@@ -167,12 +167,12 @@ class KeyedArchive extends Object
     keys.forEach((key) {
       final val = _map[key];
       if (val is Map) {
-        _map[key] = new KeyedArchive(caster.cast(val));
+        _map[key] = KeyedArchive(caster.cast(val));
       } else if (val is List) {
-        _map[key] = new ListArchive.from(val);
+        _map[key] = ListArchive.from(val);
       } else if (key == r"$ref") {
         if (val is Map) {
-          _objectReference = val as KeyedArchive;
+          _objectReference = val as KeyedArchive?;
         } else {
           referenceURI = Uri.parse(Uri.parse(val).fragment);
         }
@@ -188,7 +188,7 @@ class KeyedArchive extends Object
     if (referenceURI != null) {
       _objectReference = coder.resolve(referenceURI!);
       if (_objectReference == null) {
-        throw new ArgumentError(
+        throw ArgumentError(
             "Invalid document. Reference '#${referenceURI!.path}' does not exist in document.");
       }
     }
@@ -204,19 +204,17 @@ class KeyedArchive extends Object
 
   /* decode */
 
-  T? _decodedObject<T extends Coding>(KeyedArchive? raw, T inflate()) {
+  T? _decodedObject<T extends Coding?>(KeyedArchive? raw, T inflate()) {
     if (raw == null) {
       return null;
     }
 
     if (raw._inflated == null) {
       raw._inflated = inflate();
-      if (raw._inflated != null) {
-        raw._inflated!.decode(raw);
-      }
+      raw._inflated!.decode(raw);
     }
 
-    return raw._inflated as T;
+    return raw._inflated as T?;
   }
 
   /// Returns the object associated by [key].
@@ -228,7 +226,7 @@ class KeyedArchive extends Object
   /// If this object is a reference to another object (via [referenceURI]), this object's key-value
   /// pairs will be searched first. If [key] is not found, the referenced object's key-values pairs are searched.
   /// If no match is found, null is returned.
-  T? decode<T>(String? key) {
+  T? decode<T>(String key) {
     var v = _getValue(key);
     if (v == null) {
       return null;
@@ -248,14 +246,14 @@ class KeyedArchive extends Object
   /// [inflate] must create an empty instance of [T]. The value associated with [key]
   /// must be a [KeyedArchive] (a [Map]). The values of the associated object are read into
   /// the empty instance of [T].
-  T? decodeObject<T extends Coding>(String? key, T inflate()) {
+  T? decodeObject<T extends Coding>(String key, T inflate()) {
     final val = _getValue(key);
     if (val == null) {
       return null;
     }
 
     if (val is! KeyedArchive) {
-      throw new ArgumentError(
+      throw ArgumentError(
           "Cannot decode key '$key' into '$T', because the value is not a Map. Actual value: '$val'.");
     }
 
@@ -268,17 +266,17 @@ class KeyedArchive extends Object
   /// must be a [ListArchive] (a [List] of [Map]). For each element of the archived list,
   /// [inflate] is invoked and each object in the archived list is decoded into
   /// the instance of [T].
-  List<T?>? decodeObjects<T extends Coding>(String key, T inflate()) {
+  List<T?>? decodeObjects<T extends Coding>(String key, T? inflate()) {
     var val = _getValue(key);
     if (val == null) {
       return null;
     }
     if (val is! List) {
-      throw new ArgumentError(
+      throw ArgumentError(
           "Cannot decode key '$key' as 'List<$T>', because value is not a List. Actual value: '$val'.");
     }
 
-    return val.map((v) => _decodedObject(v, inflate)).toList();
+    return val.map((v) => _decodedObject(v, inflate)).toList().cast<T?>();
   }
 
   /// Returns a map of [T]s associated with [key].
@@ -287,14 +285,14 @@ class KeyedArchive extends Object
   /// must be a [KeyedArchive] (a [Map]), where each value is a [T].
   /// For each key-value pair of the archived map, [inflate] is invoked and
   /// each value is decoded into the instance of [T].
-  Map<String, T?>? decodeObjectMap<T extends Coding>(String? key, T inflate()) {
+  Map<String, T?>? decodeObjectMap<T extends Coding>(String key, T inflate()) {
     var v = _getValue(key);
     if (v == null) {
       return null;
     }
 
     if (v is! Map<String, dynamic>) {
-      throw new ArgumentError(
+      throw ArgumentError(
           "Cannot decode key '$key' as 'Map<String, $T>', because value is not a Map. Actual value: '$v'.");
     }
 
@@ -304,7 +302,7 @@ class KeyedArchive extends Object
 
   /* encode */
 
-  Map<String, dynamic>? _encodedObject(Coding? object) {
+  Map<String?, dynamic>? _encodedObject(Coding? object) {
     if (object == null) {
       return null;
     }
@@ -314,7 +312,7 @@ class KeyedArchive extends Object
     // they are currently not being emitted. the solution is probably tricky.
     // letting encode run as normal would stack overflow when there is a cyclic
     // reference between this object and another.
-    var json = new KeyedArchive._empty()
+    var json = KeyedArchive._empty()
       .._map = {}
       ..referenceURI = object.referenceURI;
     if (json.referenceURI != null) {
@@ -367,15 +365,14 @@ class KeyedArchive extends Object
       return;
     }
 
-    _map[key] =
-        new ListArchive.from(value.map((v) => _encodedObject(v)).toList());
+    _map[key] = ListArchive.from(value.map((v) => _encodedObject(v)).toList());
   }
 
   /// Encodes map of [Coding] objects into this object for [key].
   ///
   /// This invokes [Coding.encode] on each value in [value] and adds the map of objects
   /// to this archive for the key [key].
-  void encodeObjectMap<T extends Coding>(String key, Map<String, T?>? value) {
+  void encodeObjectMap<T extends Coding?>(String key, Map<String, T>? value) {
     if (value == null) {
       return;
     }

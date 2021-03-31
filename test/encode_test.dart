@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:conduit_codable/codable.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -44,10 +44,10 @@ void main() {
 
     test("Can encode DateTime", () {
       final out = encode((obj) {
-        obj.encode("key", new DateTime(2000));
+        obj.encode("key", DateTime(2000));
       });
 
-      expect(out, {"key": new DateTime(2000).toIso8601String()});
+      expect(out, {"key": DateTime(2000).toIso8601String()});
     });
 
     test("If value is null, do not include key", () {
@@ -293,8 +293,8 @@ void main() {
   });
 }
 
-Map<String, dynamic> encode(void encoder(KeyedArchive object)) {
-  final archive = new KeyedArchive({});
+Map<String, dynamic>? encode(void encoder(KeyedArchive object)) {
+  final archive = KeyedArchive({});
   encoder(archive);
   return json.decode(json.encode(archive));
 }
@@ -331,7 +331,7 @@ class Parent extends Coding {
   Child? child;
   List<Child?>? children;
   Map<String, Child?>? childMap;
-  List<String?>? things;
+  List<String>? things;
 
   @override
   void decode(KeyedArchive object) {

@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:conduit_codable/codable.dart';
 import 'package:test/test.dart';
-import 'package:codable/cast.dart' as cast;
+import 'package:conduit_codable/cast.dart' as cast;
 
 void main() {
   group("Primitive decode", () {
     test("Can decode primitive type", () {
       final archive = getJSONArchive({"key": 2});
-      int val = archive!.decode("key");
+      int? val = archive.decode("key");
       expect(val, 2);
     });
 
@@ -16,7 +16,7 @@ void main() {
       final archive = getJSONArchive({
         "key": [1, "2"]
       });
-      List<dynamic> l = archive!.decode("key");
+      List<dynamic>? l = archive.decode("key");
       expect(l, [1, "2"]);
     });
 
@@ -24,32 +24,32 @@ void main() {
       final archive = getJSONArchive({
         "key": {"key": "val"}
       });
-      Map<String, dynamic> d = archive!.decode("key");
+      KeyedArchive? d = archive.decode("key");
       expect(d, {"key": "val"});
     });
 
     test("Can decode URI", () {
       final archive = getJSONArchive({"key": "https://host.com"});
-      Uri d = Uri.parse(archive!.decode("key"));
-      expect(d.host, "host.com");
+      Uri? d = archive.decode("key");
+      expect(d!.host, "host.com");
     });
 
     test("Can decode DateTime", () {
-      final date = new DateTime.now();
+      final date = DateTime.now();
       final archive = getJSONArchive({"key": date.toIso8601String()});
-      DateTime d = DateTime.parse(archive!.decode("key"));
-      expect(d.isAtSameMomentAs(date), true);
+      DateTime? d = archive.decode("key");
+      expect(d!.isAtSameMomentAs(date), true);
     });
 
     test("If value is null, return null from decode", () {
       final archive = getJSONArchive({"key": null});
-      int? val = archive!.decode("key");
+      int? val = archive.decode("key");
       expect(val, isNull);
     });
 
     test("If archive does not contain key, return null from decode", () {
       final archive = getJSONArchive({});
-      int? val = archive!.decode("key");
+      int? val = archive.decode("key");
       expect(val, isNull);
     });
   });
@@ -59,8 +59,8 @@ void main() {
       final archive = getJSONArchive({
         "key": {"key": "val"}
       });
-      archive!.castValues({"key": cast.Map(cast.String, cast.String)});
-      Map<String, String> d = archive.decode("key");
+      archive.castValues({"key": cast.Map(cast.String, cast.String)});
+      Map<String, String>? d = archive.decode("key");
       expect(d, {"key": "val"});
     });
 
@@ -70,7 +70,7 @@ void main() {
           "key": ["val"]
         }
       });
-      archive!
+      archive
           .castValues({"key": cast.Map(cast.String, cast.List(cast.String))});
       Map<String, List<String?>>? d = archive.decode("key");
       expect(d, {
@@ -84,7 +84,7 @@ void main() {
           "key": [null, null]
         }
       });
-      archive!
+      archive
           .castValues({"key": cast.Map(cast.String, cast.List(cast.String))});
       Map<String, List<String?>>? d = archive.decode("key");
       expect(d, {
@@ -100,11 +100,11 @@ void main() {
           }
         }
       });
-      archive!.castValues({
+      archive.castValues({
         "key":
             cast.Map(cast.String, cast.Map(cast.String, cast.List(cast.String)))
       });
-      Map<String, Map<String, List<String?>>> d = archive.decode("key");
+      Map<String, Map<String, List<String?>>>? d = archive.decode("key");
       expect(d, {
         "key": {
           "key": ["val", null]
@@ -118,8 +118,8 @@ void main() {
       final archive = getJSONArchive({
         "key": ["val", null]
       });
-      archive!.castValues({"key": cast.List(cast.String)});
-      List<String?> d = archive.decode("key");
+      archive.castValues({"key": cast.List(cast.String)});
+      List<String?>? d = archive.decode("key");
       expect(d, ["val", null]);
     });
 
@@ -132,9 +132,9 @@ void main() {
           null
         ]
       });
-      archive!.castValues(
+      archive.castValues(
           {"key": cast.List(cast.Map(cast.String, cast.List(cast.String)))});
-      List<Map<String, List<String?>>?> d = archive.decode("key");
+      List<Map<String, List<String?>>?>? d = archive.decode("key");
       expect(d, [
         {
           "key": ["val", null]
@@ -149,7 +149,7 @@ void main() {
       final archive = getJSONArchive({
         "key": {"name": "Bob"}
       });
-      Parent p = archive!.decodeObject("key", () => Parent())!;
+      Parent p = archive.decodeObject("key", () => Parent())!;
       expect(p.name, "Bob");
       expect(p.child, isNull);
       expect(p.children, isNull);
@@ -163,7 +163,7 @@ void main() {
         ]
       });
       try {
-        archive!.decodeObject("key", () => Parent());
+        archive.decodeObject("key", () => Parent());
         fail('unreachable');
       } on ArgumentError {}
     });
@@ -176,8 +176,8 @@ void main() {
           {"name": "Sally"}
         ]
       });
-      List<Parent?> p = archive!.decodeObjects("key", () => Parent())!;
-      expect(p[0]!.name, "Bob");
+      List<Parent?>? p = archive.decodeObjects("key", () => Parent());
+      expect(p![0]!.name, "Bob");
       expect(p[1], isNull);
       expect(p[2]!.name, "Sally");
     });
@@ -189,7 +189,7 @@ void main() {
         "key": {"name": "Bob"}
       });
       try {
-        archive!.decodeObjects("key", () => Parent());
+        archive.decodeObjects("key", () => Parent());
         fail('unreachable');
       } on ArgumentError {}
     });
@@ -204,7 +204,7 @@ void main() {
         ]
       });
       try {
-        archive!.decodeObjects("key", () => Parent());
+        archive.decodeObjects("key", () => Parent());
         fail('unreachable');
       } on TypeError {}
     });
@@ -217,8 +217,8 @@ void main() {
         }
       });
 
-      final map = archive!.decodeObjectMap("key", () => Parent());
-      expect(map!.length, 2);
+      final map = archive.decodeObjectMap("key", () => Parent())!;
+      expect(map.length, 2);
       expect(map["1"]!.name, "Bob");
       expect(map["2"], isNull);
     });
@@ -227,7 +227,7 @@ void main() {
         () {
       final archive = getJSONArchive({"key": []});
       try {
-        archive!.decodeObjectMap("key", () => Parent());
+        archive.decodeObjectMap("key", () => Parent());
         fail('unreachable');
       } on ArgumentError {}
     });
@@ -239,7 +239,7 @@ void main() {
         "key": {"1": "2"}
       });
       try {
-        archive!.decodeObjectMap("key", () => Parent());
+        archive.decodeObjectMap("key", () => Parent());
         fail('unreachable');
       } on TypeError {}
     });
@@ -254,8 +254,8 @@ void main() {
         }
       });
 
-      final o = archive!.decodeObject("key", () => Parent());
-      expect(o!.name, "Bob");
+      final o = archive.decodeObject("key", () => Parent())!;
+      expect(o.name, "Bob");
       expect(o.child!.name, "Sally");
       expect(o.childMap, isNull);
       expect(o.children, isNull);
@@ -271,12 +271,12 @@ void main() {
         }
       });
 
-      final o = archive!.decodeObject("key", () => Parent());
-      expect(o!.name, "Bob");
+      final o = archive.decodeObject("key", () => Parent())!;
+      expect(o.name, "Bob");
       expect(o.child, isNull);
       expect(o.childMap, isNull);
       expect(o.children!.length, 1);
-      expect(o.children!.first!.name, "Sally");
+      expect(o.children?.first?.name, "Sally");
     });
 
     test("Can decode map of nested objects", () {
@@ -289,8 +289,8 @@ void main() {
         }
       });
 
-      final o = archive!.decodeObject("key", () => Parent());
-      expect(o!.name, "Bob");
+      final o = archive.decodeObject("key", () => Parent())!;
+      expect(o.name, "Bob");
       expect(o.children, isNull);
       expect(o.child, isNull);
       expect(o.childMap!.length, 1);
@@ -308,8 +308,8 @@ void main() {
         }
       }, allowReferences: true);
 
-      final p = archive!.decodeObject("parent", () => Parent());
-      expect(p!.name, "Bob");
+      final p = archive.decodeObject("parent", () => Parent())!;
+      expect(p.name, "Bob");
       expect(p.child!.name, "Sally");
       expect(p.child!.parent, isNull);
     });
@@ -342,10 +342,10 @@ void main() {
         }
       }, allowReferences: true);
 
-      final p = archive!.decodeObject("parent", () => Parent());
-      expect(p!.name, "Bob");
-      expect(p.children!.first!.name, "Sally");
-      expect(p.children!.last!.name, "fred");
+      final p = archive.decodeObject("parent", () => Parent())!;
+      expect(p.name, "Bob");
+      expect(p.children?.first?.name, "Sally");
+      expect(p.children?.last?.name, "fred");
     });
 
     test("Cyclical references are resolved", () {
@@ -363,13 +363,13 @@ void main() {
         }
       }, allowReferences: true);
 
-      final p = archive!.decodeObject("parent", () => Parent());
-      expect(p!.name, "Bob");
-      expect(p.children!.first!.name, "Sally");
-      expect(p.children!.first!.parent!.name, "Bob");
-      expect(p.children!.last!.name, "fred");
+      final p = archive.decodeObject("parent", () => Parent())!;
+      expect(p.name, "Bob");
+      expect(p.children?.first?.name, "Sally");
+      expect(p.children?.first?.parent!.name, "Bob");
+      expect(p.children?.last?.name, "fred");
 
-      expect(p.hashCode, isNot(p.children!.first!.parent.hashCode));
+      expect(p.hashCode, isNot(p.children?.first?.parent.hashCode));
     });
 
     test("Can override castMap to coerce values", () {
@@ -379,14 +379,14 @@ void main() {
           "things": ["value"]
         }
       });
-      final p = archive!.decodeObject("key", () => Parent());
-      expect(p!.things, ["value"]);
+      final p = archive.decodeObject("key", () => Parent())!;
+      expect(p.things, ["value"]);
     });
   });
 }
 
 /// Strips type info from data
-KeyedArchive? getJSONArchive(dynamic data, {bool allowReferences: false}) {
+KeyedArchive getJSONArchive(dynamic data, {bool allowReferences = false}) {
   return KeyedArchive.unarchive(json.decode(json.encode(data)),
       allowReferences: allowReferences);
 }
@@ -395,7 +395,7 @@ class Parent extends Coding {
   String? name;
   Child? child;
   List<Child?>? children;
-  Map<String, Child?>? childMap;
+  Map<String?, Child?>? childMap;
   List<String?>? things;
 
   @override
