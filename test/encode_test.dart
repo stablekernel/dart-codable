@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:conduit_codable/codable.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -44,10 +44,10 @@ void main() {
 
     test("Can encode DateTime", () {
       final out = encode((obj) {
-        obj.encode("key", new DateTime(2000));
+        obj.encode("key", DateTime(2000));
       });
 
-      expect(out, {"key": new DateTime(2000).toIso8601String()});
+      expect(out, {"key": DateTime(2000).toIso8601String()});
     });
 
     test("If value is null, do not include key", () {
@@ -72,7 +72,8 @@ void main() {
 
     test("Can encode list of Coding objects", () {
       final out = encode((object) {
-        object.encodeObject("key", Parent("Bob", children: [Child("Fred"), null, Child("Sally")]));
+        object.encodeObject("key",
+            Parent("Bob", children: [Child("Fred"), null, Child("Sally")]));
       });
 
       expect(out, {
@@ -90,7 +91,12 @@ void main() {
     test("Can encode map of Coding objects", () {
       final out = encode((object) {
         object.encodeObject(
-            "key", Parent("Bob", childMap: {"fred": Child("Fred"), "null": null, "sally": Child("Sally")}));
+            "key",
+            Parent("Bob", childMap: {
+              "fred": Child("Fred"),
+              "null": null,
+              "sally": Child("Sally")
+            }));
       });
 
       expect(out, {
@@ -109,7 +115,9 @@ void main() {
   group("Coding object references", () {
     test("Parent can contain reference to child in single object encode", () {
       final container = Container(
-          Parent("Bob", child: Child._()..referenceURI = Uri(path: "/definitions/child")), {"child": Child("Sally")});
+          Parent("Bob",
+              child: Child._()..referenceURI = Uri(path: "/definitions/child")),
+          {"child": Child("Sally")});
 
       final out = KeyedArchive.archive(container, allowReferences: true);
       expect(out, {
@@ -123,8 +131,13 @@ void main() {
       });
     });
 
-    test("If reference doesn't exist, an error is thrown when creating document", () {
-      final container = Container(Parent("Bob", child: Child._()..referenceURI = Uri(path: "/definitions/child")), {});
+    test(
+        "If reference doesn't exist, an error is thrown when creating document",
+        () {
+      final container = Container(
+          Parent("Bob",
+              child: Child._()..referenceURI = Uri(path: "/definitions/child")),
+          {});
 
       try {
         KeyedArchive.archive(container, allowReferences: true);
@@ -134,9 +147,14 @@ void main() {
       }
     });
 
-    test("If reference doesn't exist in objectMap, an error is thrown when creating document", () {
-      final container =
-          Container(Parent("Bob", childMap: {"c": Child._()..referenceURI = Uri(path: "/definitions/child")}), {});
+    test(
+        "If reference doesn't exist in objectMap, an error is thrown when creating document",
+        () {
+      final container = Container(
+          Parent("Bob", childMap: {
+            "c": Child._()..referenceURI = Uri(path: "/definitions/child")
+          }),
+          {});
 
       try {
         KeyedArchive.archive(container, allowReferences: true);
@@ -146,9 +164,14 @@ void main() {
       }
     });
 
-    test("If reference doesn't exist in objectList, an error is thrown when creating document", () {
-      final container =
-          Container(Parent("Bob", children: [Child._()..referenceURI = Uri(path: "/definitions/child")]), {});
+    test(
+        "If reference doesn't exist in objectList, an error is thrown when creating document",
+        () {
+      final container = Container(
+          Parent("Bob", children: [
+            Child._()..referenceURI = Uri(path: "/definitions/child")
+          ]),
+          {});
 
       try {
         KeyedArchive.archive(container, allowReferences: true);
@@ -160,7 +183,10 @@ void main() {
 
     test("Parent can contain reference to child in a list of objects", () {
       final container = Container(
-          Parent("Bob", children: [Child("Sally"), Child._()..referenceURI = Uri(path: "/definitions/child")]),
+          Parent("Bob", children: [
+            Child("Sally"),
+            Child._()..referenceURI = Uri(path: "/definitions/child")
+          ]),
           {"child": Child("Fred")});
 
       final out = KeyedArchive.archive(container, allowReferences: true);
@@ -180,8 +206,10 @@ void main() {
 
     test("Parent can contain reference to child in a map of objects", () {
       final container = Container(
-          Parent("Bob",
-              childMap: {"sally": Child("Sally"), "ref": Child._()..referenceURI = Uri(path: "/definitions/child")}),
+          Parent("Bob", childMap: {
+            "sally": Child("Sally"),
+            "ref": Child._()..referenceURI = Uri(path: "/definitions/child")
+          }),
           {"child": Child("Fred")});
 
       final out = KeyedArchive.archive(container, allowReferences: true);
@@ -201,8 +229,14 @@ void main() {
 
     test("Cyclical references are resolved", () {
       final container = Container(
-          Parent("Bob", children: [Child("Sally"), Child._()..referenceURI = Uri(path: "/definitions/child")]),
-          {"child": Child("Fred", parent: Parent._()..referenceURI = Uri(path: "/root"))});
+          Parent("Bob", children: [
+            Child("Sally"),
+            Child._()..referenceURI = Uri(path: "/definitions/child")
+          ]),
+          {
+            "child": Child("Fred",
+                parent: Parent._()..referenceURI = Uri(path: "/root"))
+          });
 
       final out = KeyedArchive.archive(container, allowReferences: true);
       final expected = {
@@ -228,7 +262,7 @@ void main() {
       // and ensure that our data is valid json
       final washedData = json.decode(json.encode(out));
       final doc = KeyedArchive.unarchive(washedData);
-      final decodedContainer = new Container._()..decode(doc);
+      final decodedContainer = Container._()..decode(doc);
       final reencodedArchive = KeyedArchive.archive(decodedContainer);
       expect(reencodedArchive, expected);
     });
@@ -259,8 +293,8 @@ void main() {
   });
 }
 
-Map<String, dynamic> encode(void encoder(KeyedArchive object)) {
-  final archive = new KeyedArchive({});
+Map<String, dynamic>? encode(void encoder(KeyedArchive object)) {
+  final archive = KeyedArchive({});
   encoder(archive);
   return json.decode(json.encode(archive));
 }
@@ -270,14 +304,14 @@ class Container extends Coding {
 
   Container(this.root, this.definitions);
 
-  Parent root;
-  Map<String, Coding> definitions;
+  Parent? root;
+  Map<String, Coding?>? definitions;
 
   @override
   void decode(KeyedArchive object) {
     super.decode(object);
 
-    root = object.decodeObject("root", () => Parent._());
+    root = object.decodeObject("root", () => Parent._())!;
     definitions = object.decodeObjectMap("definitions", () => Child._());
   }
 
@@ -293,11 +327,11 @@ class Parent extends Coding {
 
   Parent(this.name, {this.child, this.children, this.childMap, this.things});
 
-  String name;
-  Child child;
-  List<Child> children;
-  Map<String, Child> childMap;
-  List<String> things;
+  String? name;
+  Child? child;
+  List<Child?>? children;
+  Map<String, Child?>? childMap;
+  List<String>? things;
 
   @override
   void decode(KeyedArchive object) {
@@ -324,8 +358,8 @@ class Child extends Coding {
 
   Child(this.name, {this.parent});
 
-  String name;
-  Parent parent;
+  String? name;
+  Parent? parent;
 
   @override
   void decode(KeyedArchive object) {

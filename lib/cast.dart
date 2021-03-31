@@ -58,41 +58,41 @@ class AnyCast extends Cast<dynamic> {
 class IntCast extends Cast<core.int> {
   const IntCast();
   core.int _cast(dynamic from, core.String context, dynamic key) =>
-    from is core.int
-      ? from
-      : throw new FailedCast(context, key, "$from is not an int");
+      from is core.int
+          ? from
+          : throw FailedCast(context, key, "$from is not an int");
 }
 
 class DoubleCast extends Cast<core.double> {
   const DoubleCast();
   core.double _cast(dynamic from, core.String context, dynamic key) =>
-    from is core.double
-      ? from
-      : throw new FailedCast(context, key, "$from is not an double");
+      from is core.double
+          ? from
+          : throw FailedCast(context, key, "$from is not an double");
 }
 
 class StringCast extends Cast<core.String> {
   const StringCast();
   core.String _cast(dynamic from, core.String context, dynamic key) =>
-    from is core.String
-      ? from
-      : throw new FailedCast(context, key, "$from is not a String");
+      from is core.String
+          ? from
+          : throw FailedCast(context, key, "$from is not a String");
 }
 
 class BoolCast extends Cast<core.bool> {
   const BoolCast();
   core.bool _cast(dynamic from, core.String context, dynamic key) =>
-    from is core.bool
-      ? from
-      : throw new FailedCast(context, key, "$from is not a bool");
+      from is core.bool
+          ? from
+          : throw FailedCast(context, key, "$from is not a bool");
 }
 
 class Map<K, V> extends Cast<core.Map<K, V>> {
   final Cast<K> _key;
   final Cast<V> _value;
   const Map(Cast<K> key, Cast<V> value)
-    : _key = key,
-      _value = value;
+      : _key = key,
+        _value = value;
   core.Map<K, V> _cast(dynamic from, core.String context, dynamic key) {
     if (from is core.Map) {
       var result = <K, V>{};
@@ -102,7 +102,7 @@ class Map<K, V> extends Cast<core.Map<K, V>> {
       }
       return result;
     }
-    return throw new FailedCast(context, key, "not a map");
+    return throw FailedCast(context, key, "not a map");
   }
 }
 
@@ -110,25 +110,25 @@ class StringMap<V> extends Cast<core.Map<core.String, V>> {
   final Cast<V> _value;
   const StringMap(Cast<V> value) : _value = value;
   core.Map<core.String, V> _cast(
-    dynamic from, core.String context, dynamic key) {
+      dynamic from, core.String context, dynamic key) {
     if (from is core.Map) {
       var result = <core.String, V>{};
-      for (core.String key in from.keys) {
+      for (core.String key in from.keys as core.Iterable<core.String>) {
         result[key] = _value._cast(from[key], "map entry", key);
       }
       return result;
     }
-    return throw new FailedCast(context, key, "not a map");
+    return throw FailedCast(context, key, "not a map");
   }
 }
 
-class List<E> extends Cast<core.List<E>> {
+class List<E> extends Cast<core.List<E?>> {
   final Cast<E> _entry;
   const List(Cast<E> entry) : _entry = entry;
-  core.List<E> _cast(dynamic from, core.String context, dynamic key) {
+  core.List<E?> _cast(dynamic from, core.String context, dynamic key) {
     if (from is core.List) {
       var length = from.length;
-      var result = core.List<E>(length);
+      var result = core.List<E?>.filled(length, null);
       for (core.int i = 0; i < length; ++i) {
         if (from[i] != null) {
           result[i] = _entry._cast(from[i], "list entry", i);
@@ -138,28 +138,27 @@ class List<E> extends Cast<core.List<E>> {
       }
       return result;
     }
-    return throw new FailedCast(context, key, "not a list");
+    return throw FailedCast(context, key, "not a list");
   }
 }
 
-class Keyed<K, V> extends Cast<core.Map<K, V>> {
+class Keyed<K, V> extends Cast<core.Map<K, V?>> {
   Iterable<K> get keys => _map.keys;
   final core.Map<K, Cast<V>> _map;
-  const Keyed(core.Map<K, Cast<V>> map)
-    : _map = map;
-  core.Map<K, V> _cast(dynamic from, core.String context, dynamic key) {
-    core.Map<K, V> result = {};
+  const Keyed(core.Map<K, Cast<V>> map) : _map = map;
+  core.Map<K, V?> _cast(dynamic from, core.String context, dynamic key) {
+    core.Map<K, V?> result = {};
     if (from is core.Map) {
-      for (K key in from.keys) {
+      for (K key in from.keys as core.Iterable<K>) {
         if (_map.containsKey(key)) {
-          result[key] = _map[key]._cast(from[key], "map entry", key);
+          result[key] = _map[key]!._cast(from[key], "map entry", key);
         } else {
           result[key] = from[key];
         }
       }
       return result;
     }
-    return throw new FailedCast(context, key, "not a map");
+    return throw FailedCast(context, key, "not a map");
   }
 }
 
@@ -167,8 +166,8 @@ class OneOf<S, T> extends Cast<dynamic> {
   final Cast<S> _left;
   final Cast<T> _right;
   const OneOf(Cast<S> left, Cast<T> right)
-    : _left = left,
-      _right = right;
+      : _left = left,
+        _right = right;
   dynamic _cast(dynamic from, core.String context, dynamic key) {
     try {
       return _left._cast(from, context, key);
@@ -182,10 +181,10 @@ class Apply<S, T> extends Cast<T> {
   final Cast<S> _first;
   final T Function(S) _transform;
   const Apply(T Function(S) transform, Cast<S> first)
-    : _transform = transform,
-      _first = first;
+      : _transform = transform,
+        _first = first;
   T _cast(dynamic from, core.String context, dynamic key) =>
-    _transform(_first._cast(from, context, key));
+      _transform(_first._cast(from, context, key));
 }
 
 class Future<E> extends Cast<async.Future<E>> {
@@ -195,7 +194,7 @@ class Future<E> extends Cast<async.Future<E>> {
     if (from is async.Future) {
       return from.then(_value.cast);
     }
-    return throw new FailedCast(context, key, "not a Future");
+    return throw FailedCast(context, key, "not a Future");
   }
 }
 
